@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="eel.js"></script>
+    <title>Torlak search</title>
+    <style>
+        .sentence {
+            margin-bottom: 7px;
+            font-size: 14px;
+
+        }
+        body {
+            padding: 20px;
+        }
+
+        div {
+            margin: 10px;
+        }
+
+
+
+  button{
+  background-image: linear-gradient(#0dccea, #0d70ea);
+  border: 0;
+  border-radius: 4px;
+  box-shadow: rgba(0, 0, 0, .3) 0 5px 15px;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  font-family: Montserrat,sans-serif;
+  font-size: .9em;
+  margin: 10px;
+  padding: 10px 15px;
+  text-align: center;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+
+  input {
+      -webkit-tap-highlight-color: transparent;
+background-color: transparent;
+color: rgba(0, 0, 0, .87);
+cursor: text;
+font-family: arial,sans-serif;
+font-size: 16px;
+font-weight: 400;
+height: 39px;
+line-height: 39px;
+margin: -42px 0 0;
+outline: none;
+overflow-wrap: break-word;
+padding: 0;
+word-wrap: break-word;
+border: #0d70ea solid 1px;
+      border-radius: 4px;
+      width: 300px;
+  }
+
+  .expand {
+      color: grey;
+  }
+
+  .expand:hover {
+      color: blue;
+  }
+
+  .link {
+      cursor: pointer;
+      color: blueviolet;
+  }
+
+  .link:hover {
+      color: aqua;
+  }
+
+
+    </style>
+</head>
+<body>
+
+<div>
+    Это форма для поиска в текстах по проекту ТРА ЦЕ БА.
+    Используются ненормализрированные и нелемматтизированные тексты (plain text).
+    Поэтому, когда вводятся ключевые слова, нужно писать их в транскрипции источника.
+    Транскрипция атласа отличается от транскрипции, использованной нами при расшифровке аудио из Берчиновца,
+    поэтому могут быть случаи, когда одно и то же слово нужно писать два или более раз (каждый раз в соответствии с разными транскрипциями источников),
+    чтобы оно нашлось во всех текстах.
+
+</div>
+<div>
+    В программе используется самый простой поиск, который просто ищет вхождение ключевых строк в тексте.
+    Поскольку текст не лемматизирован, рекомендую писать кючевые слова не целиком,
+    а только их основу (учитывая при этом разные фонетические процессы в разных формах), чтобы "поймать" все формы слова.
+    Также нужно учитывать, что в одних и тех же словах у разных информантов могут быть разные ударения,
+    поэтому нужно написать в запросе все возможные варианты.
+</div>
+
+<div>
+    Ключевые слова должны быть разделены пробелами.
+
+</div>
+<div>
+    Пример поиска слова devojka в текстах атласа  тимокском корпусе
+    (<b>учитываются разные варианты основы и разные варианты ударения, приводится только основа слова без окончаний</b>): <br/>
+    devojč devójk devojk
+</div>
+
+<div>
+    Если нужно найти то же слово в текстах из Берчиновца,
+    то к этому запросу нужно добавить те же варианты, но только с другим способом выделения ударения - тем, который принят нами в берчиновских транскрипциях: <br>
+    devojč devójk  dev'ojče dev'ojk
+</div>
+
+<div>
+    Попробуйте скопировать строку с разными вариантами слова devojka и вставить ее в поисковик.
+
+</div>
+
+<input id="query" type="text" placeholder="Enter your query..." required=""/>
+<button id="show" onclick="show_data()">Show the result</button>
+<button id="show1" onclick="show_data_with_context()">Show with context</button>
+<button id="reset" onclick="reset()">Reset</button>
+<div id="info">
+    <ol id="resList">
+
+    </ol>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<script type="text/javascript">
+
+    async function show_data() {
+        document.getElementById("resList").innerHTML = '';
+        let query = document.getElementById('query').value;
+        let res = await eel.get_data(query=query)();
+        for (let sent of res) {
+            let node = document.createElement("LI");                 // Create a <li> node
+             node.innerHTML = sent
+            document.getElementById("resList").appendChild(node)
+        }
+
+    }
+
+
+        async function show_data_with_context() {
+        console.log('!!!')
+        document.getElementById("resList").innerHTML = '';
+        let query = document.getElementById('query').value;
+        let res = await eel.get_data_with_context(query=query)();
+        for (let sent of res) {
+            let node = document.createElement("LI");                 // Create a <li> node
+             node.innerHTML = sent
+            document.getElementById("resList").appendChild(node)
+        }
+
+    }
+
+            function reset() {
+            document.getElementById("resList").innerHTML = '';
+        }
+
+ async function expand(event) {
+        let classes = event.target.classList
+     console.log(classes)
+     let file = classes[1]
+     let index = classes[2]
+     let query = document.getElementById('query').value;
+     let res = await eel.expand_context(file, index, query)();
+     let parentID = event.target.parentNode.id;
+     event.target.parentElement.innerHTML = res;
+ }
+
+  async function openFile(event) {
+        let classes2 = event.target.classList
+        let file2 = classes2[0]
+      console.log(classes2)
+        document.getElementById("info").innerHTML = '<ol id="resList"></ol>';
+      document.getElementById('info').innerHTML = await eel.open_file(file2)()
+ }
+
+    async function back() {
+        document.getElementById("info").innerHTML = '<ol id="resList"></ol>';
+        let query = document.getElementById('query').value;
+        let res = await eel.get_data(query=query)();
+        for (let sent of res) {
+            let node = document.createElement("LI");                 // Create a <li> node
+             node.innerHTML = sent
+            document.getElementById("resList").appendChild(node)
+        }
+ }
+
+
+</script>
+</body>
+</html>
